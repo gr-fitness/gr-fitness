@@ -1299,18 +1299,64 @@ const LEVEL_TIPS = {
   intermediate:'Progress one variable at a time — a little more weight, one more rep, or one less minute of rest. Log every session in My Progress.',
   advanced:'Recovery is your limiter now, not effort. Sleep, food and deload weeks every 6-8 weeks will move you further than extra sessions.'
 };
-function buildReco(){
-  const goal=document.getElementById('wGoal').value;
-  const level=document.getElementById('wLevel').value;
-  const style=document.getElementById('wStyle').value;
-  const plan=RECO[goal][level];
-  document.getElementById('recoTitle').textContent=`${RECO[goal].label} — ${level.charAt(0).toUpperCase()+level.slice(1)} Plan`;
-  document.getElementById('recoSub').textContent=`${plan.length} sessions per week · built for your style`;
-  document.getElementById('recoDays').innerHTML=plan.map(([d,w,s])=>`
-    <div class="reco-day"><div class="d">// ${d}</div><div class="w">${w}<small>${s}</small></div></div>`).join('');
-  document.getElementById('recoTips').innerHTML=`<strong style="color:var(--bone)">Coach's notes:</strong> ${STYLE_TIPS[style]} ${LEVEL_TIPS[level]}`;
-  document.getElementById('recoOut').classList.add('show');
-  document.getElementById('recoOut').scrollIntoView({behavior:'smooth',block:'start'});
+async function buildReco() {
+  const goal = document.getElementById('wGoal').value;
+  const level = document.getElementById('wLevel').value;
+  const style = document.getElementById('wStyle').value;
+
+  const recoOut = document.getElementById('recoOut');
+  const recoTitle = document.getElementById('recoTitle');
+  const recoSub = document.getElementById('recoSub');
+  const recoDays = document.getElementById('recoDays');
+  const recoTips = document.getElementById('recoTips');
+
+  recoOut.classList.add('show');
+  recoTitle.textContent = 'Creating Your AI Workout...';
+  recoSub.textContent = 'GR Fitness AI is building your personalised plan.';
+  recoDays.innerHTML = '<div>Please wait...</div>';
+  recoTips.innerHTML = '';
+
+  recoOut.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  try {
+    const response = await fetch('/api/workout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        goal: goal,
+        level: level,
+        style: style
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Workout generation failed');
+    }
+
+    recoTitle.textContent = 'Your AI Personalised Workout';
+    recoSub.textContent = `${goal} • ${level} • ${style}`;
+
+    recoDays.innerHTML = `
+      <div style="white-space: pre-wrap; line-height: 1.7;">
+        ${data.workout}
+      </div>
+    `;
+
+    recoTips.innerHTML =
+      '<strong>GR Fitness AI:</strong> Your workout has been personalised based on your selections.';
+
+  } catch (error) {
+    console.error(error);
+
+    recoTitle.textContent = 'Unable to Generate Workout';
+    recoSub.textContent = 'Please try again.';
+    recoDays.innerHTML =
+      '<div>Something went wrong while generating your AI workout.</div>';
+  }
 }
 
 /* ============ CONTACT ============ */
