@@ -207,6 +207,20 @@ section{padding:76px 0}
 .check-list li{display:flex;gap:12px;color:var(--ash)}
 .check-list li::before{content:"//";color:var(--ember);font-family:var(--font-label);font-weight:700}
 
+/* ============ PROMOTIONS ============ */
+.promo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-bottom:34px}
+.promo-card{background:linear-gradient(135deg,rgba(255,90,31,.16),rgba(27,27,31,.96));border:1px solid var(--ember);border-radius:var(--radius);padding:26px}
+.promo-card h3{font-family:var(--font-display);text-transform:uppercase;font-size:1.35rem;margin:7px 0 8px}
+.promo-card p{color:var(--ash);font-size:.94rem}
+.promo-badge{font-family:var(--font-label);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:.75rem;color:var(--ember)}
+.legal-links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.legal-links a{color:var(--ash);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.legal-links a:hover{color:var(--ember)}
+.legal-copy h4{font-family:var(--font-label);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 6px}
+.legal-copy h4:first-child{margin-top:0}
+.legal-copy p,.legal-copy li{color:var(--ash);font-size:.92rem}
+.legal-copy ul{padding-left:20px;margin-top:6px}
+
 /* ============ MEMBERSHIPS ============ */
 .page-hero{
   padding:84px 0 60px;border-bottom:1px solid var(--line);
@@ -424,6 +438,7 @@ footer{background:#070708;border-top:1px solid var(--line);padding:60px 0 0}
   .nav-actions .btn-ghost{display:none}
   .grid-3,.grid-2,.plan-grid{grid-template-columns:1fr}
   .why-grid{grid-template-columns:1fr}
+  .promo-grid{grid-template-columns:1fr}
   .field-row{grid-template-columns:1fr}
   .footer-grid{grid-template-columns:1fr}
   section{padding:56px 0}
@@ -590,6 +605,18 @@ footer{background:#070708;border-top:1px solid var(--line);padding:60px 0 0}
   </section>
   <section>
     <div class="container">
+      <div class="promo-grid">
+        <div class="promo-card">
+          <span class="promo-badge">Launch Offer</span>
+          <h3>20% Off Your First Month</h3>
+          <p>New members receive 20% off their first month when joining GR Fitness during the launch period. Terms apply.</p>
+        </div>
+        <div class="promo-card">
+          <span class="promo-badge">Refer A Friend</span>
+          <h3>Train Together. Save Together.</h3>
+          <p>Refer a friend who joins GR Fitness and receive $10 off your next membership payment.</p>
+        </div>
+      </div>
       <div class="plan-grid">
         <article class="card plan">
           <div class="card-body">
@@ -868,12 +895,24 @@ footer{background:#070708;border-top:1px solid var(--line);padding:60px 0 0}
     </div>
     <div class="footer-legal">
       <span>© 2026 GR Fitness Pty Ltd · ABN 12 345 678 901 · ACN 345 678 901 (temporary — placeholder only)</span>
+      <div class="legal-links">
+        <a onclick="openLegal('privacy')">Privacy Policy</a>
+        <a onclick="openLegal('terms')">Terms of Use</a>
+        <a onclick="openLegal('cancellation')">Cancellation &amp; Refund Policy</a>
+      </div>
       <span class="disclaimer">This website/app is for a class assignment and not for commercial purposes.</span>
     </div>
   </div>
 </footer>
 
 <!-- ================= MODALS ================= -->
+<div class="modal-backdrop" id="legalModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+    <div class="modal-head"><h3 id="legalTitle">Policy</h3><button class="modal-close" onclick="closeModal('legalModal')" aria-label="Close">×</button></div>
+    <div class="modal-body legal-copy" id="legalBody"></div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="authModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="modal-head"><h3 id="authTitle">Log In</h3><button class="modal-close" onclick="closeModal('authModal')" aria-label="Close">×</button></div>
@@ -920,7 +959,7 @@ const state = {
     goal: 'Lose weight & build strength',
     log: [
       {date:'Fri 7 Aug', workout:'Upper Body Strength', duration:'52 min', note:'New bench PB — 80kg'},
-      {date:'Thu 6 Aug', workout:'HIT Blast (class)', duration:'45 min', note:'Coach Maya session'},
+      {date:'Thu 6 Aug', workout:'HIIT Blast (class)', duration:'45 min', note:'Coach Maya session'},
       {date:'Tue 4 Aug', workout:'Lower Body Strength', duration:'58 min', note:'Squats 5×5 @ 95kg'},
       {date:'Mon 3 Aug', workout:'Spin & Sweat (class)', duration:'45 min', note:'Avg HR 152'},
       {date:'Sat 1 Aug', workout:'Full Body Circuit', duration:'40 min', note:'Felt strong'},
@@ -932,7 +971,7 @@ let pendingPlan = null;
 
 /* ============ CLASS & TRAINER DATA ============ */
 const CLASSES = [
-  {name:'HIT Blast', coach:'Maya T.', when:'Mon & Wed · 6:00 PM', level:'All levels', spots:6,
+  {name:'HIIT Blast', coach:'Maya T.', when:'Mon & Wed · 6:00 PM', level:'All levels', spots:6,
    img:'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=900&q=75&auto=format&fit=crop',
    desc:'45 minutes of intervals that torch calories and build engine. Scaled options for every level.'},
   {name:'Strength Foundations', coach:'Daniel K.', when:'Tue & Thu · 7:00 AM', level:'Beginner', spots:9,
@@ -989,6 +1028,17 @@ function toast(msg){
 /* ============ MODAL HELPERS ============ */
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
+function openLegal(type){
+  const title=document.getElementById('legalTitle');
+  const body=document.getElementById('legalBody');
+  const policies={
+    privacy:{title:'Privacy Policy',html:`<h4>Information We Collect</h4><p>GR Fitness may collect account, contact, booking, membership and fitness-progress information supplied by members.</p><h4>How We Use It</h4><p>Information is used to manage memberships, bookings, payments, progress tracking and customer support. Access is limited to authorised users.</p><h4>Payment Security</h4><p>GR Fitness does not store full card details. In a commercial launch, payments would be processed by a trusted third-party payment provider.</p><h4>Assignment Notice</h4><p>This prototype is for a class assignment. Details shown are demonstration data only.</p>`},
+    terms:{title:'Terms of Use',html:`<h4>Website Use</h4><p>Users must provide accurate account information and use GR Fitness services responsibly.</p><h4>Memberships & Bookings</h4><p>Membership inclusions, prices and booking availability are shown before purchase or reservation. Promotions are subject to stated conditions.</p><h4>Fitness Guidance</h4><p>Workout recommendations are general fitness guidance and do not replace professional medical advice. Users should train within their ability and seek appropriate professional advice when required.</p><h4>Prototype</h4><p>This website is an academic prototype and is not operating as a commercial gym.</p>`},
+    cancellation:{title:'Cancellation & Refund Policy',html:`<h4>Membership Cancellation</h4><p>Flex memberships may be cancelled through the member portal with 7 days' notice. Other plan conditions are displayed when joining.</p><h4>Class & PT Bookings</h4><p>Members should cancel bookings as early as possible so places can be released to other members. Late-cancellation conditions may apply to paid personal training sessions.</p><h4>Refunds</h4><p>Eligible refunds would be assessed in line with the membership terms and Australian Consumer Law. Any refund due would be returned through the original payment method.</p><h4>Need Help?</h4><p>Contact GR Fitness through the Contact Us page for membership, billing or cancellation support.</p>`}
+  };
+  const p=policies[type]; if(!p)return;
+  title.textContent=p.title; body.innerHTML=p.html; openModal('legalModal');
+}
 document.querySelectorAll('.modal-backdrop').forEach(b=>{
   b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open')});
 });
@@ -1222,14 +1272,14 @@ const RECO = {
   fatloss:{
     label:'Lose Weight',
     beginner:[['Mon','Full Body Circuit','6 stations, 40s on / 20s off × 3 rounds'],['Wed','Incline Walk + Core','30 min treadmill @ incline 8, plank series'],['Fri','Strength Foundations class','Build muscle to raise your metabolism'],['Sat','Long Walk / Light Cardio','45-60 min easy pace — steps count']],
-    intermediate:[['Mon','HIT Blast class','Intervals with coach Maya'],['Tue','Full Body Strength','Compound lifts 3×10 — keep the muscle while losing fat'],['Thu','Spin & Sweat class','45 min high-output cardio'],['Fri','Strength + Finisher','Lifts 3×10 + 10-min bike sprints'],['Sun','Active Recovery','Walk, stretch, prep meals for the week']],
-    advanced:[['Mon','Strength (Heavy)','Big lifts 5×5 — strength holds fat loss together'],['Tue','HIT Blast class','Max-effort intervals'],['Wed','Tempo Cardio','35 min row/bike at hard-but-steady pace'],['Thu','Strength (Volume)','3×12 supersets, short rest'],['Sat','Boxing Conditioning class','High burn, high skill'],['Sun','LISS','60 min easy cardio']]
+    intermediate:[['Mon','HIIT Blast class','Intervals with coach Maya'],['Tue','Full Body Strength','Compound lifts 3×10 — keep the muscle while losing fat'],['Thu','Spin & Sweat class','45 min high-output cardio'],['Fri','Strength + Finisher','Lifts 3×10 + 10-min bike sprints'],['Sun','Active Recovery','Walk, stretch, prep meals for the week']],
+    advanced:[['Mon','Strength (Heavy)','Big lifts 5×5 — strength holds fat loss together'],['Tue','HIIT Blast class','Max-effort intervals'],['Wed','Tempo Cardio','35 min row/bike at hard-but-steady pace'],['Thu','Strength (Volume)','3×12 supersets, short rest'],['Sat','Boxing Conditioning class','High burn, high skill'],['Sun','LISS','60 min easy cardio']]
   },
   fitness:{
     label:'General Fitness',
     beginner:[['Mon','Full Body Strength','Machines + dumbbells, 2-3×12, learn the gym'],['Wed','Cardio Mix','20 min bike + 10 min rower, easy pace'],['Fri','Strength Foundations class','Coached technique session'],['Sun','Power Yoga class','Mobility, balance and a good stretch']],
     intermediate:[['Mon','Upper Body Strength','Push + pull supersets 3×10'],['Tue','Spin & Sweat class','Cardio with a crowd'],['Thu','Lower Body Strength','Squat pattern + hinge pattern 3×10'],['Sat','GR Circuit class','Fun, varied, hard'],['Sun','Recovery Walk','30-45 min outdoors']],
-    advanced:[['Mon','Strength (Push/Pull)','Heavy compounds 4×6'],['Tue','Boxing Conditioning class','Skill + engine'],['Wed','Lower Strength','Squat/deadlift focus 4×6'],['Fri','HIT Blast class','Intervals'],['Sat','Long Cardio + Mobility','60 min zone 2 + stretch']]
+    advanced:[['Mon','Strength (Push/Pull)','Heavy compounds 4×6'],['Tue','Boxing Conditioning class','Skill + engine'],['Wed','Lower Strength','Squat/deadlift focus 4×6'],['Fri','HIIT Blast class','Intervals'],['Sat','Long Cardio + Mobility','60 min zone 2 + stretch']]
   },
   endurance:{
     label:'Improve Endurance',
