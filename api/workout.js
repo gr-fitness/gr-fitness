@@ -1,31 +1,29 @@
-export default {
-  async fetch(request) {
-    if (request.method !== "POST") {
-      return Response.json(
-        { error: "Method not allowed" },
-        { status: 405 }
-      );
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const { goal, level, style } = req.body;
+
+    if (!goal || !level || !style) {
+      return res.status(400).json({
+        error: "Missing workout details"
+      });
     }
 
-    try {
-      const { goal, level, style } = await request.json();
-
-      if (!goal || !level || !style) {
-        return Response.json(
-          { error: "Missing workout details" },
-          { status: 400 }
-        );
-      }
-
-      const response = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-5-mini",
-          input: `
+    const response = await openai.responses.create({
+      model: "gpt-5-mini",
+      reasoning: {
+        effort: "low"
+      },
+      input: `
 You are the AI workout assistant for GR Fitness.
 
 Create a personalised 4-day weekly gym workout plan.
@@ -36,49 +34,41 @@ Preferred training style: ${style}
 
 For each day include:
 - workout focus
-- exercises
+- 4 to 6 exercises
 - sets
 - reps
 
-Keep the plan suitable for the user's experience level.
-Keep it clear and concise.
-Finish with a short safety reminder.
+Keep the workout appropriate for the user's experience level.
+
+Use a clear format like:
+
+DAY 1 — UPPER BODY
+Bench Press — 3 x 10
+Lat Pulldown — 3 x 10
+
+Finish with one short safety reminder.
 `
-        })
+    });
+
+    const workout = response.output_text;
+
+    if (!workout) {
+      console.error("Full OpenAI response:", response);
+
+      return res.status(500).json({
+        error: "No workout was generated"
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("OpenAI error:", data);
-
-        return Response.json(
-          { error: data?.error?.message || "OpenAI request failed" },
-          { status: 500 }
-        );
-      }
-
-      const workout =
-        data.output?.[0]?.content?.find(
-          item => item.type === "output_text"
-        )?.text;
-
-      if (!workout) {
-        return Response.json(
-          { error: "No workout generated" },
-          { status: 500 }
-        );
-      }
-
-      return Response.json({ workout });
-
-    } catch (error) {
-      console.error(error);
-
-      return Response.json(
-        { error: "Unable to generate workout" },
-        { status: 500 }
-      );
     }
+
+    return res.status(200).json({
+      workout
+    });
+
+  } catch (error) {
+    console.error("Workout API error:", error);
+
+    return res.status(500).json({
+      error: error.message || "Unable to generate workout"
+    });
   }
-};
+}
