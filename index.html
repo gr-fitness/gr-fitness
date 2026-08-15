@@ -1200,67 +1200,439 @@ function cancelBooking(i){
 
 /* ============ MY PROGRESS ============ */
 function renderProgress(){
-  const area=document.getElementById('progressArea');
+  const area = document.getElementById('progressArea');
+
   if(!state.user){
-    area.innerHTML=`
+    area.innerHTML = `
       <div class="gate">
         <p class="eyebrow" style="justify-content:center">Members Only</p>
-        <h2 class="display h-section" style="margin-bottom:12px">Log in to see your progress</h2>
-        <p class="lede" style="margin:0 auto 26px">Your dashboard tracks workouts completed, current weight, goals and upcoming bookings.</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-          <button class="btn btn-ember" onclick="openAuth('login')">Log In</button>
-          <button class="btn btn-line" onclick="demoLogin();go('progress')">View Demo Dashboard</button>
-        </div>
+        <h2 class="display h-section">Log in to see your account</h2>
+        <p class="lede" style="margin:12px auto 26px">
+          Manage your membership, bookings and fitness progress in one place.
+        </p>
+        <button class="btn btn-ember" onclick="openAuth('login')">Log In</button>
       </div>`;
     return;
   }
-  const p=state.progress;
-  const lost=(p.startWeight-p.weight).toFixed(1);
-  const pct=Math.min(100,Math.round(((p.startWeight-p.weight)/(p.startWeight-p.goalWeight))*100));
-  area.innerHTML=`
-    <div class="section-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;margin-bottom:26px">
-      <div>
-        <p class="eyebrow">Dashboard</p>
-        <h2 class="display h-section">Hey ${state.user.name.split(' ')[0]} 👊</h2>
-        <p class="lede" style="margin-top:6px">Membership: <strong style="color:var(--ember)">${state.plan||'No active plan'}</strong>${state.plan?'':' — <a style="color:var(--ember);cursor:pointer;text-decoration:underline" onclick="go(\'memberships\')">choose a plan</a>'}</p>
-      </div>
-      <button class="btn btn-line btn-sm" onclick="go('workouts')">Update My Workout Plan</button>
-    </div>
-    <div class="stat-grid">
-      <div class="stat ember-top"><div class="num">${p.workouts}</div><div class="lbl">Workouts Completed</div></div>
-      <div class="stat"><div class="num">${p.streak}<small> wks</small></div><div class="lbl">Current Streak</div></div>
-      <div class="stat"><div class="num">${p.weight}<small> kg</small></div><div class="lbl">Current Weight</div></div>
-      <div class="stat"><div class="num">${lost}<small> kg</small></div><div class="lbl">Lost Since Joining</div></div>
-    </div>
-    <div class="grid-2" style="align-items:start">
-      <div class="panel">
-        <h3>Goal Progress</h3>
-        <p style="color:var(--ash);font-size:.95rem">Goal: <strong style="color:var(--bone)">${p.goal}</strong></p>
-        <p style="color:var(--ash);font-size:.9rem;margin-top:10px">Target weight ${p.goalWeight} kg — you're <strong style="color:var(--ember)">${pct}%</strong> of the way there.</p>
-        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:.8rem;color:var(--ash)">
-          <span>${p.startWeight} kg start</span><span>${p.goalWeight} kg goal</span>
+
+  const p = state.progress;
+  const lost = (p.startWeight - p.weight).toFixed(1);
+  const pct = Math.min(
+    100,
+    Math.round(
+      ((p.startWeight - p.weight) /
+      (p.startWeight - p.goalWeight)) * 100
+    )
+  );
+
+  const prices = {
+    'Student Flex': '$12.95 / week',
+    'GR Standard': '$19.95 / week',
+    'GR Elite': '$29.95 / week'
+  };
+
+  const currentPlan = state.plan || 'No Active Membership';
+  const currentPrice = prices[state.plan] || '—';
+
+  const nextPayment = new Date();
+  nextPayment.setDate(nextPayment.getDate() + 14);
+
+  const nextPaymentText = state.plan
+    ? nextPayment.toLocaleDateString('en-AU', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : '—';
+
+  area.innerHTML = `
+
+    <!-- MANAGE MEMBERSHIP -->
+    <div class="panel" style="
+      margin-bottom:24px;
+      border-top:3px solid var(--ember);
+    ">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:20px;
+        flex-wrap:wrap;
+      ">
+
+        <div>
+          <p class="eyebrow">Manage Membership</p>
+
+          <h2 class="display h-section">
+            ${currentPlan}
+          </h2>
+
+          <p style="color:var(--ash);margin-top:6px;">
+            ${state.plan
+              ? 'Your GR Fitness membership is currently active.'
+              : 'You do not currently have an active membership.'}
+          </p>
         </div>
-        <h3 style="margin-top:28px">Upcoming Bookings</h3>
-        ${state.bookings.length ? state.bookings.map((b,i)=>`
-          <div class="booking-item">
-            <div><div class="who">${b.name} <span class="chip" style="margin-left:6px">${b.type}</span></div><div class="when">${b.when}</div></div>
-            <button class="btn btn-line btn-sm" onclick="cancelBooking(${i})">Cancel</button>
-          </div>`).join('')
-        : `<p class="empty-note">No bookings yet — <a style="color:var(--ember);cursor:pointer;text-decoration:underline" onclick="go('classes')">book a class</a> or <a style="color:var(--ember);cursor:pointer;text-decoration:underline" onclick="go('pt')">a PT session</a> to get started.</p>`}
+
+        <span style="
+          border:1px solid var(--ember);
+          color:var(--ember);
+          border-radius:30px;
+          padding:6px 14px;
+          font-family:var(--font-label);
+          font-weight:700;
+          text-transform:uppercase;
+          letter-spacing:.12em;
+          font-size:.78rem;
+        ">
+          ${state.plan ? '● Active' : 'Inactive'}
+        </span>
+
       </div>
+
+      <div class="grid-3" style="margin-top:24px;">
+
+        <div class="stat">
+          <div class="lbl">Current Plan</div>
+          <div style="
+            font-weight:700;
+            font-size:1.1rem;
+            margin-top:7px;
+          ">
+            ${currentPlan}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="lbl">Membership Price</div>
+          <div style="
+            font-weight:700;
+            font-size:1.1rem;
+            margin-top:7px;
+          ">
+            ${currentPrice}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="lbl">Next Payment</div>
+          <div style="
+            font-weight:700;
+            font-size:1.1rem;
+            margin-top:7px;
+          ">
+            ${nextPaymentText}
+          </div>
+        </div>
+
+      </div>
+
+      <div style="
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:22px;
+      ">
+
+        <button
+          class="btn btn-ember btn-sm"
+          onclick="go('memberships')">
+          Change Plan
+        </button>
+
+        <button
+          class="btn btn-line btn-sm"
+          onclick="pauseMembership()"
+          ${!state.plan ? 'disabled' : ''}>
+          Pause Membership
+        </button>
+
+        <button
+          class="btn btn-line btn-sm"
+          onclick="cancelMembership()"
+          ${!state.plan ? 'disabled' : ''}>
+          Cancel Membership
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- DASHBOARD HEADER -->
+    <div class="section-head"
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-end;
+        flex-wrap:wrap;
+        gap:14px;
+        margin-bottom:26px;
+      ">
+
+      <div>
+
+        <p class="eyebrow">Fitness Dashboard</p>
+
+        <h2 class="display h-section">
+          Hey ${state.user.name.split(' ')[0]} 👊
+        </h2>
+
+        <p class="lede" style="margin-top:6px">
+          Track your fitness progress and upcoming bookings.
+        </p>
+
+      </div>
+
+      <button
+        class="btn btn-line btn-sm"
+        onclick="go('workouts')">
+        Generate AI Workout
+      </button>
+
+    </div>
+
+
+    <!-- FITNESS STATS -->
+    <div class="stat-grid">
+
+      <div class="stat ember-top">
+        <div class="num">${p.workouts}</div>
+        <div class="lbl">Workouts Completed</div>
+      </div>
+
+      <div class="stat">
+        <div class="num">
+          ${p.streak}<small> wks</small>
+        </div>
+        <div class="lbl">Current Streak</div>
+      </div>
+
+      <div class="stat">
+        <div class="num">
+          ${p.weight}<small> kg</small>
+        </div>
+        <div class="lbl">Current Weight</div>
+      </div>
+
+      <div class="stat">
+        <div class="num">
+          ${lost}<small> kg</small>
+        </div>
+        <div class="lbl">Lost Since Joining</div>
+      </div>
+
+    </div>
+
+
+    <div class="grid-2" style="align-items:start">
+
+      <!-- GOAL -->
       <div class="panel">
-        <h3>Recent Workouts</h3>
-        <table class="log-table">
-          <thead><tr><th>Date</th><th>Workout</th><th>Time</th></tr></thead>
-          <tbody>
-            ${p.log.map(l=>`<tr><td style="white-space:nowrap;color:var(--ash)">${l.date}</td><td>${l.workout}<br><small style="color:var(--ash)">${l.note}</small></td><td style="color:var(--ash)">${l.duration}</td></tr>`).join('')}
-          </tbody>
-        </table>
+
+        <h3>Goal Progress</h3>
+
+        <p style="color:var(--ash)">
+          Goal:
+          <strong style="color:var(--bone)">
+            ${p.goal}
+          </strong>
+        </p>
+
+        <p style="
+          color:var(--ash);
+          font-size:.9rem;
+          margin-top:10px;
+        ">
+          Target weight ${p.goalWeight} kg —
+          you're
+          <strong style="color:var(--ember)">
+            ${pct}%
+          </strong>
+          of the way there.
+        </p>
+
+        <div class="bar-wrap">
+          <div
+            class="bar-fill"
+            style="width:${pct}%">
+          </div>
+        </div>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          margin-top:8px;
+          font-size:.8rem;
+          color:var(--ash);
+        ">
+          <span>${p.startWeight} kg start</span>
+          <span>${p.goalWeight} kg goal</span>
+        </div>
+
+
+        <h3 style="margin-top:28px">
+          Upcoming Bookings
+        </h3>
+
+        ${
+          state.bookings.length
+            ? state.bookings.map((b,i)=>`
+
+              <div class="booking-item">
+
+                <div>
+                  <div class="who">
+                    ${b.name}
+                    <span
+                      class="chip"
+                      style="margin-left:6px">
+                      ${b.type}
+                    </span>
+                  </div>
+
+                  <div class="when">
+                    ${b.when}
+                  </div>
+                </div>
+
+                <button
+                  class="btn btn-line btn-sm"
+                  onclick="cancelBooking(${i})">
+                  Cancel
+                </button>
+
+              </div>
+
+            `).join('')
+
+            : `
+
+              <p class="empty-note">
+                No bookings yet —
+                <a
+                  style="
+                    color:var(--ember);
+                    cursor:pointer;
+                    text-decoration:underline;
+                  "
+                  onclick="go('classes')">
+                  book a class
+                </a>
+                or
+                <a
+                  style="
+                    color:var(--ember);
+                    cursor:pointer;
+                    text-decoration:underline;
+                  "
+                  onclick="go('pt')">
+                  a PT session
+                </a>.
+              </p>
+
+            `
+        }
+
       </div>
-    </div>`;
+
+
+      <!-- WORKOUT LOG -->
+      <div class="panel">
+
+        <h3>Recent Workouts</h3>
+
+        <table class="log-table">
+
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Workout</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            ${
+              p.log.map(l=>`
+
+                <tr>
+
+                  <td style="
+                    white-space:nowrap;
+                    color:var(--ash);
+                  ">
+                    ${l.date}
+                  </td>
+
+                  <td>
+                    ${l.workout}
+                    <br>
+                    <small style="color:var(--ash)">
+                      ${l.note}
+                    </small>
+                  </td>
+
+                  <td style="color:var(--ash)">
+                    ${l.duration}
+                  </td>
+
+                </tr>
+
+              `).join('')
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+  `;
+}
+function pauseMembership(){
+
+  if(!state.plan){
+    toast('You do not have an active membership.');
+    return;
+  }
+
+  const confirmed = confirm(
+    `Pause your ${state.plan} membership?`
+  );
+
+  if(!confirmed) return;
+
+  toast(
+    `${state.plan} membership paused successfully.`
+  );
 }
 
+
+function cancelMembership(){
+
+  if(!state.plan){
+    toast('You do not have an active membership.');
+    return;
+  }
+
+  const confirmed = confirm(
+    `Are you sure you want to cancel your ${state.plan} membership?`
+  );
+
+  if(!confirmed) return;
+
+  state.plan = null;
+
+  renderProgress();
+
+  toast(
+    'Your membership has been cancelled.'
+  );
+}
 /* ============ WORKOUT RECOMMENDATIONS ============ */
 const RECO = {
   muscle:{
