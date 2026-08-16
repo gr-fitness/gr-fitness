@@ -1117,23 +1117,161 @@ function startCheckout(name,priceLabel,price){
   openModal('payModal');
 }
 function processPay(planName){
-  const card=document.getElementById('payCard').value.replace(/\s/g,'');
-  const exp=document.getElementById('payExp').value;
-  const cvc=document.getElementById('payCvc').value;
-  if(card.length<15) return showMsg('payMsg','err','Please enter a valid card number.');
-  if(!/^\d{2}\/\d{2}$/.test(exp)) return showMsg('payMsg','err','Expiry must be in MM/YY format.');
-  if(cvc.length<3) return showMsg('payMsg','err','Please enter your card CVC.');
-  state.plan=planName;
-  document.getElementById('payBody').innerHTML=`
+
+  const card = document.getElementById('payCard').value.replace(/\s/g,'');
+  const exp = document.getElementById('payExp').value;
+  const cvc = document.getElementById('payCvc').value;
+
+  if(card.length < 15)
+    return showMsg('payMsg','err','Please enter a valid card number.');
+
+  if(!/^\d{2}\/\d{2}$/.test(exp))
+    return showMsg('payMsg','err','Expiry must be in MM/YY format.');
+
+  if(cvc.length < 3)
+    return showMsg('payMsg','err','Please enter your card CVC.');
+
+  state.plan = planName;
+
+  const prices = {
+    'Student Flex': 12.95,
+    'GR Standard': 19.95,
+    'GR Elite': 29.95
+  };
+
+  const planPrice = prices[planName] || 0;
+  const joiningFee = planName === 'Student Flex' ? 0 : 29;
+  const totalPaid = planPrice + joiningFee;
+
+  const transactionId =
+    'GR-' + Math.random().toString(36).substring(2,10).toUpperCase();
+
+  const paymentDate = new Date().toLocaleDateString('en-AU');
+
+  window.lastReceipt = {
+    member: state.user.name,
+    email: state.user.email || '',
+    plan: planName,
+    price: planPrice,
+    joiningFee: joiningFee,
+    total: totalPaid,
+    date: paymentDate,
+    transactionId: transactionId
+  };
+
+  document.getElementById('payBody').innerHTML = `
     <div class="success-box">
+
       <div class="success-ic">✓</div>
-      <h3 class="display" style="font-size:1.5rem;text-transform:uppercase;margin-bottom:8px">Payment Successful</h3>
-      <p style="color:var(--ash);margin-bottom:22px">Welcome to <strong style="color:var(--bone)">${planName}</strong>, ${state.user.name.split(' ')[0]}. Your membership is active — your keycard is ready at reception.</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-ember btn-sm" onclick="closeModal('payModal');go('progress')">Go To My Progress</button>
-        <button class="btn btn-line btn-sm" onclick="closeModal('payModal');go('classes')">Book A Class</button>
+
+      <h3 class="display"
+        style="font-size:1.5rem;text-transform:uppercase;margin-bottom:8px">
+        Payment Successful
+      </h3>
+
+      <p style="color:var(--ash);margin-bottom:22px">
+        Welcome to
+        <strong style="color:var(--bone)">${planName}</strong>,
+        ${state.user.name.split(' ')[0]}.
+        Your membership is now active.
+      </p>
+
+      <div style="
+        background:var(--ink);
+        border:1px solid var(--line);
+        padding:18px;
+        border-radius:8px;
+        text-align:left;
+        margin-bottom:22px;
+      ">
+
+        <h4 style="margin-bottom:14px">GR FITNESS RECEIPT</h4>
+
+        <p><strong>Member:</strong> ${state.user.name}</p>
+        <p><strong>Plan:</strong> ${planName}</p>
+        <p><strong>Membership Price:</strong> $${planPrice.toFixed(2)}</p>
+        <p><strong>Joining Fee:</strong> $${joiningFee.toFixed(2)}</p>
+        <p><strong>Total Paid:</strong> $${totalPaid.toFixed(2)}</p>
+        <p><strong>Date:</strong> ${paymentDate}</p>
+        <p><strong>Transaction ID:</strong> ${transactionId}</p>
+
       </div>
-    </div>`;
+
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+
+        <button class="btn btn-ember btn-sm"
+          onclick="downloadReceipt()">
+          Download Receipt
+        </button>
+
+        <button class="btn btn-line btn-sm"
+          onclick="closeModal('payModal');go('progress')">
+          Go To My Progress
+        </button>
+
+        <button class="btn btn-line btn-sm"
+          onclick="closeModal('payModal');go('classes')">
+          Book A Class
+        </button>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+function downloadReceipt(){
+
+  if(!window.lastReceipt){
+    toast('No receipt available.');
+    return;
+  }
+
+  const r = window.lastReceipt;
+
+  const receiptText = `
+GR FITNESS
+PAYMENT RECEIPT
+----------------------------------
+
+Member: ${r.member}
+Email: ${r.email}
+
+Membership Plan: ${r.plan}
+Membership Price: $${r.price.toFixed(2)}
+Joining Fee: $${r.joiningFee.toFixed(2)}
+
+TOTAL PAID: $${r.total.toFixed(2)}
+
+Date: ${r.date}
+Transaction ID: ${r.transactionId}
+
+----------------------------------
+GR Fitness
+
+DEMO TRANSACTION
+University assignment demonstration only.
+No real payment has been processed.
+`;
+
+  const blob = new Blob([receiptText], {
+    type: 'text/plain'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = `GR-Fitness-Receipt-${r.transactionId}.txt`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+
+  toast('Receipt downloaded successfully.');
 }
 
 /* ============ CLASSES / PT RENDER + BOOKING ============ */
