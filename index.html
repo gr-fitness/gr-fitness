@@ -593,7 +593,97 @@ footer{background:#070708;border-top:1px solid var(--line);padding:60px 0 0}
     </div>
   </section>
 </div>
+<section>
+  <div class="container">
 
+    <div class="section-head" style="margin-bottom:28px;">
+      <div>
+        <p class="eyebrow">Member Feedback</p>
+        <h2 class="display h-section">What Our Members Say</h2>
+        <p class="lede" style="margin-top:8px;">
+          Feedback from GR Fitness members about their experience.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid-3" id="feedbackList">
+
+      <div class="panel">
+        <div style="color:var(--ember);font-size:1.2rem;margin-bottom:10px;">
+          ★★★★★
+        </div>
+        <p style="color:var(--bone);">
+          “The website makes booking classes and managing my membership really easy.”
+        </p>
+        <p style="color:var(--ash);margin-top:12px;font-size:.9rem;">
+          — James T.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div style="color:var(--ember);font-size:1.2rem;margin-bottom:10px;">
+          ★★★★★
+        </div>
+        <p style="color:var(--bone);">
+          “I like being able to track my progress and get personalised workouts online.”
+        </p>
+        <p style="color:var(--ash);margin-top:12px;font-size:.9rem;">
+          — Sarah M.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div style="color:var(--ember);font-size:1.2rem;margin-bottom:10px;">
+          ★★★★☆
+        </div>
+        <p style="color:var(--bone);">
+          “Simple to use and everything I need for the gym is in one place.”
+        </p>
+        <p style="color:var(--ash);margin-top:12px;font-size:.9rem;">
+          — Daniel R.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="panel" style="margin-top:28px;max-width:700px;">
+
+      <h3>Leave Feedback</h3>
+
+      <div class="field">
+        <label>Name</label>
+        <input id="feedbackName" type="text" placeholder="Your name">
+      </div>
+
+      <div class="field">
+        <label>Rating</label>
+        <select id="feedbackRating">
+          <option value="5">5 Stars</option>
+          <option value="4">4 Stars</option>
+          <option value="3">3 Stars</option>
+          <option value="2">2 Stars</option>
+          <option value="1">1 Star</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Feedback</label>
+        <textarea id="feedbackMessage"
+          placeholder="Tell us about your experience..."
+          style="min-height:120px;"></textarea>
+      </div>
+
+      <button class="btn btn-ember"
+        onclick="submitFeedback()">
+        Submit Feedback
+      </button>
+
+      <div class="form-msg" id="feedbackMsg"></div>
+
+    </div>
+
+  </div>
+</section>
 <!-- ================= MEMBERSHIPS ================= -->
 <div class="page" id="page-memberships">
   <section class="page-hero">
@@ -1958,8 +2048,54 @@ async function buildReco() {
       '<div>Something went wrong while generating your AI workout.</div>';
   }
 }
+}
 
-/* ============ CONTACT ============ */
+function submitFeedback(){
+
+  const name = document.getElementById('feedbackName').value.trim();
+  const rating = parseInt(document.getElementById('feedbackRating').value);
+  const message = document.getElementById('feedbackMessage').value.trim();
+
+  if(name.length < 2){
+    return showMsg('feedbackMsg','err','Please enter your name.');
+  }
+
+  if(message.length < 5){
+    return showMsg('feedbackMsg','err','Please enter some feedback.');
+  }
+
+  const stars = '★'.repeat(rating) + '☆'.repeat(5-rating);
+
+  const feedbackList = document.getElementById('feedbackList');
+
+  const newFeedback = document.createElement('div');
+  newFeedback.className = 'panel';
+
+  newFeedback.innerHTML = `
+    <div style="color:var(--ember);font-size:1.2rem;margin-bottom:10px;">
+      ${stars}
+    </div>
+
+    <p style="color:var(--bone);">
+      “${message}”
+    </p>
+
+    <p style="color:var(--ash);margin-top:12px;font-size:.9rem;">
+      — ${name}
+    </p>
+  `;
+
+  feedbackList.appendChild(newFeedback);
+
+  document.getElementById('feedbackName').value = '';
+  document.getElementById('feedbackMessage').value = '';
+  document.getElementById('feedbackRating').value = '5';
+
+  showMsg('feedbackMsg','ok','Thanks! Your feedback has been submitted.');
+}
+
+
+/* ========== CONTACT ========== */
 function sendContact(){
   const name=document.getElementById('cName').value.trim();
   const email=document.getElementById('cEmail').value.trim();
