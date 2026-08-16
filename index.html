@@ -1229,49 +1229,139 @@ function downloadReceipt(){
   }
 
   const r = window.lastReceipt;
+  const { jsPDF } = window.jspdf;
 
-  const receiptText = `
-GR FITNESS
-PAYMENT RECEIPT
-----------------------------------
+  const doc = new jsPDF();
 
-Member: ${r.member}
-Email: ${r.email}
+  // Header
+  doc.setFillColor(255, 88, 31);
+  doc.rect(0, 0, 210, 32, 'F');
 
-Membership Plan: ${r.plan}
-Membership Price: $${r.price.toFixed(2)}
-Joining Fee: $${r.joiningFee.toFixed(2)}
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.text('GR FITNESS', 15, 17);
 
-TOTAL PAID: $${r.total.toFixed(2)}
+  doc.setFontSize(11);
+  doc.text('PAYMENT RECEIPT', 15, 25);
 
-Date: ${r.date}
-Transaction ID: ${r.transactionId}
+  // Receipt details
+  doc.setTextColor(30, 30, 30);
 
-----------------------------------
-GR Fitness
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
 
-DEMO TRANSACTION
-University assignment demonstration only.
-No real payment has been processed.
-`;
+  let y = 48;
 
-  const blob = new Blob([receiptText], {
-    type: 'text/plain'
+  doc.text('Receipt Details', 15, y);
+
+  y += 12;
+
+  doc.setFontSize(10);
+
+  doc.text(`Member: ${r.member}`, 15, y);
+  y += 8;
+
+  doc.text(`Email: ${r.email}`, 15, y);
+  y += 8;
+
+  doc.text(`Membership Plan: ${r.plan}`, 15, y);
+  y += 8;
+
+  doc.text(
+    `Membership Price: $${r.price.toFixed(2)}`,
+    15,
+    y
+  );
+  y += 8;
+
+  doc.text(
+    `Joining Fee: $${r.joiningFee.toFixed(2)}`,
+    15,
+    y
+  );
+
+  y += 12;
+
+  // Total box
+  doc.setFillColor(245, 245, 245);
+  doc.rect(15, y, 180, 18, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+
+  doc.text(
+    `TOTAL PAID: $${r.total.toFixed(2)}`,
+    20,
+    y + 12
+  );
+
+  y += 30;
+
+  // Transaction information
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+
+  doc.text(`Date: ${r.date}`, 15, y);
+  y += 8;
+
+  doc.text(
+    `Transaction ID: ${r.transactionId}`,
+    15,
+    y
+  );
+
+  y += 22;
+
+  // Paid status
+  doc.setTextColor(0, 130, 70);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('STATUS: PAID', 15, y);
+
+  y += 20;
+
+  // Footer
+  doc.setTextColor(90, 90, 90);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+
+  doc.text(
+    'Thank you for joining GR Fitness.',
+    15,
+    y
+  );
+
+  y += 8;
+
+  doc.text(
+    'This transaction is for a university class assignment demonstration only.',
+    15,
+    y
+  );
+
+  y += 6;
+
+  doc.text(
+    'No real payment has been processed.',
+    15,
+    y
+  );
+
+  // PDF metadata
+  doc.setProperties({
+    title: `GR Fitness Receipt ${r.transactionId}`,
+    subject: 'GR Fitness Membership Payment Receipt',
+    author: 'GR Fitness',
+    creator: 'GR Fitness Website'
   });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  // Download PDF
+  doc.save(
+    `GR-Fitness-Receipt-${r.transactionId}.pdf`
+  );
 
-  link.href = url;
-  link.download = `GR-Fitness-Receipt-${r.transactionId}.txt`;
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  URL.revokeObjectURL(url);
-
-  toast('Receipt downloaded successfully.');
+  toast('PDF receipt downloaded successfully.');
 }
 
 /* ============ CLASSES / PT RENDER + BOOKING ============ */
@@ -1886,5 +1976,6 @@ renderClasses();
 renderTrainers();
 renderProgress();
 </script>
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
 </body>
 </html>
